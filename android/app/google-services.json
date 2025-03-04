@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "925103976600",
+    "project_id": "membership-cimso",
+    "storage_bucket": "membership-cimso.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925103976600:android:78f0f9c0f96d72df0c60ed",
+        "android_client_info": {
+          "package_name": "com.example.cimso2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDS-Y_Y_pxb9DwHnVvBu4BGJO27pItJOM0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:925103976600:android:1b0346cd31f786bf0c60ed",
+        "android_client_info": {
+          "package_name": "com.example.cimso_heckathon"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDS-Y_Y_pxb9DwHnVvBu4BGJO27pItJOM0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

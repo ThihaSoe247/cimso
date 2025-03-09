@@ -9,40 +9,54 @@ class RegisterPage extends StatelessWidget {
   final TextEditingController password = TextEditingController();
   final TextEditingController confirmpassword = TextEditingController();
   final TextEditingController fullName = TextEditingController();
-  final TextEditingController phoneNumber = TextEditingController();
+  final TextEditingController clientID = TextEditingController();
+  final TextEditingController memberID = TextEditingController();  // Reintroduced memberID
 
   // Registration Function
   void registerAccount(BuildContext context) async {
     if (password.text == confirmpassword.text) {
       if (email.text.isNotEmpty && password.text.isNotEmpty) {
         try {
-          // Register the user with Firebase Authentication
-          UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          // Register user with Firebase Authentication
+          UserCredential userCredential = await FirebaseAuth.instance
+              .createUserWithEmailAndPassword(
             email: email.text,
             password: password.text,
           );
 
-          // Now add the member details to Firestore
+
           await FirestoreService().addMemberToFirestore(
             fullName: fullName.text,
-            phoneNumber: phoneNumber.text,
             email: email.text,
-            profilePicture: '', // Use a default image or empty for now
+            profilePicture: '',
+            clientID: clientID.text,
+            memberID: memberID.text,  // Pass memberID
           );
 
           // Navigate to Login Page after registration
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage()));
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
 
-          // Optionally show a success message
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Registration successful!")));
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Registration successful!")),
+          );
         } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error: ${e.toString()}")),
+          );
         }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Please fill all fields")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Please fill all fields")),
+        );
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Passwords do not match")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Passwords do not match")),
+      );
     }
   }
 
@@ -50,12 +64,14 @@ class RegisterPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.green,
-      body: Center(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              SizedBox(height: 50),
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: Image.asset(
@@ -65,35 +81,72 @@ class RegisterPage extends StatelessWidget {
                   fit: BoxFit.cover,
                 ),
               ),
-              SizedBox(height: 25),
+              SizedBox(height: 20),
               Text(
                 "Register Page",
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
-              SizedBox(height: 25),
-              MyTextfield(controller: fullName, hintText: "Enter your Fullname", obsecureText: false),
-
-              SizedBox(height: 20),
-              MyTextfield(controller: email, hintText: "Email", obsecureText: false),
               SizedBox(height: 20),
 
+              MyTextfield(
+                controller: fullName,
+                hintText: "Full Name",
+                obsecureText: false,
+              ),
+              SizedBox(height: 15),
 
-              MyTextfield(controller: password, hintText: "Password", obsecureText: true),
+              MyTextfield(
+                controller: email,
+                hintText: "Email",
+                obsecureText: false,
+              ),
+              SizedBox(height: 15),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: MyTextfield(
+                      controller: clientID,
+                      hintText: "Client ID",
+                      obsecureText: false,
+                    ),
+                  ),
+                  SizedBox(width: 15),
+
+                  Expanded(
+                    child: MyTextfield(
+                      controller: memberID,
+                      hintText: "MemberID",
+                      obsecureText: false,
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 15),
+
+              MyTextfield(
+                controller: password,
+                hintText: "Password",
+                obsecureText: true,
+              ),
+              SizedBox(height: 15),
+              MyTextfield(
+                controller: confirmpassword,
+                hintText: "Confirm Password",
+                obsecureText: true,
+              ),
 
               SizedBox(height: 20),
-              MyTextfield(controller: confirmpassword, hintText: "Confirmed Password", obsecureText: true),
 
-              SizedBox(height: 25),
-              MyTextfield(controller: phoneNumber, hintText: "Enter your Phone Number", obsecureText: false),
-
-
-              SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
-                  registerAccount(context); // Call registration method
+                  registerAccount(context);
                 },
                 child: Text("Sign Up"),
               ),
+
+              SizedBox(height: 10),
+
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -108,12 +161,23 @@ class RegisterPage extends StatelessWidget {
                     child: Text(
                       "Log In Here",
                       style: TextStyle(
-                          decoration: TextDecoration.underline,color: Colors.blue, fontWeight: FontWeight.bold,fontSize: 20),
+                        decoration: TextDecoration.underline,
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
                     ),
                   ),
                 ],
               ),
-              Text("By signing in, you agree to CiMSO Terms and Conditions, Terms of Use and Privacy Policy.")
+
+              SizedBox(height: 10),
+
+              Text(
+                "By signing in, you agree to CiMSO Terms and Conditions, Terms of Use and Privacy Policy.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: Colors.white),
+              ),
             ],
           ),
         ),

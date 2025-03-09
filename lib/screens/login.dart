@@ -1,5 +1,4 @@
 import 'package:cimso_heckathon/screens/register_screen.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import '../components/my_button.dart';

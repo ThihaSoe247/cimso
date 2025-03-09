@@ -1,6 +1,4 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -27,9 +25,9 @@ class AuthService {
     }
   }
 
-  Future<void> signOut() async {
-    return await _auth.signOut();
-  }
+  // Future<void> signOut() async {
+  //   return await _auth.signOut();
+  // }
 }
 
 

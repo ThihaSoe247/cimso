@@ -1,6 +1,5 @@
 class Member {
   final String fullName;
-  final String phoneNumber;
   final String email;
   final String profilePicture;
   final String memberID;
@@ -8,7 +7,6 @@ class Member {
 
   Member({
     required this.fullName,
-    required this.phoneNumber,
     required this.email,
     required this.profilePicture,
     required this.memberID,
@@ -19,7 +17,6 @@ class Member {
   Map<String, dynamic> toMap() {
     return {
       'fullName': fullName,
-      'phoneNumber': phoneNumber,
       'email': email,
       'profilePicture': profilePicture,
       'memberID': memberID,
@@ -31,7 +28,6 @@ class Member {
   factory Member.fromMap(Map<String, dynamic> map) {
     return Member(
       fullName: map['fullName'] ?? '',
-      phoneNumber: map['phoneNumber'] ?? '',
       email: map['email'] ?? '',
       profilePicture: map['profilePicture'] ?? '',
       memberID: map['memberID'] ?? '',

@@ -1,98 +1,184 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../model/hotel.dart';
 import '../model/member_object.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
+import '../statements/statement.dart';
 
 class FirestoreService {
   final CollectionReference members = FirebaseFirestore.instance.collection("members");
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final CollectionReference statements = FirebaseFirestore.instance.collection("statements");  // New statements collection
+
 
   // Fetch Member Details
-  Future<Member?> fetchMemberDetails(String clientId) async {
+  Future<Member?> fetchMemberDetails() async {
     try {
-      DocumentSnapshot doc = await members.doc(clientId).get();
+      String? userID = _auth.currentUser?.uid; // Get the currently logged-in user's UID
+      if (userID == null) return null;
+
+      DocumentSnapshot doc = await members.doc(userID).get();
       if (doc.exists) {
         return Member.fromMap(doc.data() as Map<String, dynamic>);
       }
     } catch (e) {
-      print("Error fetching member details: $e");
+
     }
     return null;
   }
 
-  // Add Member to Firestore
+  // Add Member to Firestore (Without using memberID)
   Future<void> addMemberToFirestore({
     required String fullName,
-    required String phoneNumber,
     required String email,
     required String profilePicture,
+    required String clientID,
+    required String memberID,
   }) async {
     try {
-      String memberID = _auth.currentUser?.uid ?? ""; // Get the UID of the registered user
+      String? userID = _auth.currentUser?.uid; // Get Firebase Auth UID
+      if (userID == null) {
+        return;
+      }
 
       Member newMember = Member(
         fullName: fullName,
-        phoneNumber: phoneNumber,
         email: email,
         profilePicture: profilePicture,
-        memberID: memberID,
-        clientID: memberID,  // Use memberID as clientID
+        memberID: memberID, // Store the Firebase UID in memberID field
+        clientID: clientID,
       );
 
-      await members.doc(memberID).set(newMember.toMap());
+      await members.doc(userID).set(newMember.toMap()); // Store using UID
 
-      print("Member added successfully!");
     } catch (e) {
-      print("Error adding member to Firestore: $e");
+      return;
     }
   }
 
-  // Add Statement for a User
-  Future<void> addStatement({
-    required String memberId,
-    required String description,
-    required double amount,
-    required DateTime date,
+  // Save Hotel for User
+  Future<void> saveHotelForUser(Hotel hotel) async {
+    try {
+      String? userID = _auth.currentUser?.uid;
+      if (userID == null) {
+        return;
+      }
+      CollectionReference userHotels = members.doc(userID).collection("hotels");
+
+      await userHotels.add({
+        "name": hotel.name,
+        "location": hotel.location,
+        "image": hotel.image,
+        "price": hotel.price,
+        "type": hotel.type,
+      });
+
+    } catch (e) {
+      print("Error saving hotel: $e");
+    }
+  }
+
+  // Save Booking Receipt for User (Added function)
+  Future<void> saveReceiptForUser({
+    required String hotelName,
+    required String location,
+    required DateTime checkInDate,
+    required DateTime checkOutDate,
+    required int guests,
+    required String bedType,
+    required bool breakfastIncluded,
+    required double totalPrice,
   }) async {
     try {
-      // Generate a unique statement ID
-      String statementId = statements.doc().id; // Automatically generates a unique ID
+      String? userID = _auth.currentUser?.uid;
+      if (userID == null) {
+        return;
+      }
+      CollectionReference userReservations = members.doc(userID).collection("reservations");
 
-      // Create statement data
-      Map<String, dynamic> statementData = {
-        'memberId': memberId,
-        'description': description,
-        'amount': amount,
-        'date': date,
-      };
+      await userReservations.add({
+        "hotelName": hotelName,
+        "location": location,
+        "checkInDate": checkInDate,
+        "checkOutDate": checkOutDate,
+        "guests": guests,
+        "bedType": bedType,
+        "breakfastIncluded": breakfastIncluded,
+        "totalPrice": totalPrice,
+        "bookingDate": FieldValue.serverTimestamp(),
+        "completed": false,
+      });
 
-      // Add the statement to Firestore
-      await statements.doc(statementId).set(statementData);
-
-      print("Statement added successfully!");
     } catch (e) {
-      print("Error adding statement: $e");
+    }
+  }
+  Future<List<Map<String, dynamic>>> fetchReservations() async {
+    List<Map<String, dynamic>> reservationsList = [];
+    final CollectionReference reservations =
+    FirebaseFirestore.instance.collection("reservations");
+    try {
+      String? userID = _auth.currentUser?.uid; // Get Firebase Auth UID
+      if (userID == null) {
+        return reservationsList;
+      }
+
+      QuerySnapshot querySnapshot = await reservations
+          .where("userID", isEqualTo: userID)
+          .get(); // Assuming reservations have a "userID" field
+
+      for (var doc in querySnapshot.docs) {
+        reservationsList.add(doc.data() as Map<String, dynamic>);
+      }
+    } catch (e) {
+    }
+    return reservationsList;
+  }
+
+  Future<void> saveStatementForUser(Statement statement) async {
+    String? userID = _auth.currentUser?.uid; // Get Firebase Auth UID
+
+    if (userID == null) {
+      return;
+    }
+
+    CollectionReference userStatements = members.doc(userID).collection("statements");
+
+    try {
+      await userStatements.add({
+        "hotelName": statement.hotelName,
+        "user":statement.user,
+        "amount": statement.amount,
+        "type": statement.type,
+        "memberID": statement.memberID,
+        "date": Timestamp.fromDate(statement.date),
+      });
+
+    } catch (e) {
+      print("Error saving statement: $e");
     }
   }
 
-  // Fetch Statements for a User
-  Future<List<Map<String, dynamic>>> fetchStatements(String memberId) async {
+  Future<List<Statement>> fetchStatements(String userID) async {
+    List<Statement> statementsList = [];
     try {
-      // Fetch statements where the memberId matches the given memberId
-      QuerySnapshot snapshot = await statements
-          .where('memberId', isEqualTo: memberId)
-          .orderBy('date', descending: true)  // Order statements by date
+      String? authUserID = _auth.currentUser?.uid; // Get Firebase Auth UID
+      if (authUserID == null) {
+        return statementsList;
+      }
+      final CollectionReference statements =
+      FirebaseFirestore.instance.collection("statements");
+
+      QuerySnapshot querySnapshot = await statements
+          .where("userID", isEqualTo: userID) // Assuming statements are linked to a memberID
           .get();
 
-      // Convert the documents to a list of maps
-      List<Map<String, dynamic>> statementsList = snapshot.docs.map((doc) {
-        return doc.data() as Map<String, dynamic>;
-      }).toList();
-
-      return statementsList;
+      // Iterate through the fetched documents and convert them to Statement objects
+      for (var doc in querySnapshot.docs) {
+        statementsList.add(Statement.fromMap(doc.data() as Map<String, dynamic>));
+      }
     } catch (e) {
-      print("Error fetching statements: $e");
-      return [];
     }
+    return statementsList;
   }
+
+
 }
